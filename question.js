@@ -3,31 +3,18 @@ let mainMenu = {
   name: "userChoice",
   message: "Select(Use arrow keys)",
   choices: [
-    "Aptitude",
     "Data Structure and Algorithm",
     "Core Subject",
     "Web Developement",
     "Job Information",
   ],
 };
-let aptitudeQuestionList = {
+
+let dsaQuestionList = {
   type: "rawlist",
   name: "userChoice",
   message: "Select any section:",
-  choices: [
-    "Arithmetic Aptitude",
-    "Verbal Ability",
-    "Verbal Reasoning",
-    "Logical Reasoning",
-    "Data Interpretation",
-    "Back",
-  ],
-};
-let dsaQuestionList = {
-  type: "rawlist",
-  name: "UserChoice",
-  message: "Select any section:",
-  choices: ["Pepcoding", "Leetcode", "Geeks for Geeks", "Interviewbit"],
+  choices: ["Leetcode", "Geeks for Geeks", "Interviewbit"],
 };
 let coreSubjectList = {
   type: "list",
@@ -41,28 +28,45 @@ let coreSubjectList = {
   ],
 };
 
+let dsaQuestion = [
+  {
+    type: "input",
+    name: "userChoice",
+    message: "Enter topic:",
+  },
+  {
+    type: "input",
+    name: "difficultyChoice",
+    message: "Enter difficulty:",
+  },
+]
+
 let webDevelopementList = {
-    type:'list',
-    name:'userChoice',
-    message:'Select any section:',
-    choices: ['Pepcoding', 'Free Code Camp', 'Traversy Media']
-}
-let jobInformationQuestion = [{
-    type: 'input',
-    name: 'userChoice',
+  type: "list",
+  name: "userChoice",
+  message: "Select any section:",
+  choices: ["Pepcoding", "Free Code Camp", "Traversy Media"],
+};
+let jobInformationQuestion = [
+  {
+    type: "input",
+    name: "userChoice",
     message: "Enter company:",
-},{
-    type: 'input',
-    name: 'userCityChoice',
+  },
+  {
+    type: "input",
+    name: "userCityChoice",
     message: "Enter city or state:",
-}]
-    
+  },
+];
+
 
 module.exports = {
-  aptitudeQuestionList,
   dsaQuestionList,
   mainMenu,
   coreSubjectList,
   webDevelopementList,
-  jobInformationQuestion
+  jobInformationQuestion,
+  dsaQuestion
+ 
 };
