@@ -1,4 +1,5 @@
 "use strict";
+const { exitOverride } = require("commander");
 const inquirer = require("inquirer");
 const puppeteer = require("puppeteer");
 const {
@@ -9,37 +10,79 @@ const {
   jobInformationQuestion,
   dsaQuestion,
 } = require("./question.js");
-// let allTopicList = [];
+// const XLSX = require("xlsx");
+let pepcodingLink =
+  "https://www.youtube.com/watch?v=mrEcfu-ByDw&list=PL-Jc9J83PIiEeD3I4VXETPDmzJ3Z1rWb4";
+let traversyMediaLink =
+  "https://www.youtube.com/playlist?list=PLillGF-RfqbYeckUaD1z6nviTp31GLTH8";
+let userProblemList = [];
+let difficultyList = ["Hard", "Easy", "Medium", "hard", "medium", "easy"];
 
-let difficultyList = ["Hard", "Easy", "Medium","hard", "easy", "medium"];
 console.log("This is a multi-purpose command line interface.");
 
 inquirer.prompt(mainMenu).then((answers) => {
-  if (answers.userChoice == "Data Structure and Algorithm") {
-    inquirer.prompt(dsaQuestionList).then((answers) => {
-      if (answers.userChoice == "Leetcode") {
-        inquirer.prompt(dsaQuestion).then((answers) => {
-          getLeetCodeData(answers.userChoice, answers.difficultyChoice);
-        });
-      } else if (true) {
-      }
-    });
-  } else if (answers.userChoice == "Core Subject") {
-    inquirer.prompt(coreSubjectList).then((answers) => {
-      console.log(answers.userChoice);
-      getCoreSubjectData(answers.userChoice);
-    });
-  } else if (answers.userChoice == "Web Developement") {
-    inquirer.prompt(webDevelopementList).then((answers) => {
-      console.log(answers.userChoice);
-      getWebDevData(answers.userChoice);
-    });
-  } else {
-    inquirer.prompt(jobInformationQuestion).then((answers) => {
-      getJobInformation(answers.userChoice, answers.userCityChoice);
-    });
+  switch (answers.userChoice) {
+    case "Data Structure and Algorithm":
+      solveDsa();
+      break;
+    case "Core Subject":
+      solveCoreSubject();
+      break;
+    case "Web Developement":
+      solveWebDev();
+      break;
+    case "Job Information":
+      solveJob();
+      break;
+    default:
+      return;
   }
 });
+
+function solveWebDev() {
+  inquirer.prompt(webDevelopementList).then((answers) => {
+    console.log(answers.userChoice);
+    switch (answers.userChoice) {
+      case "Pepcoding":
+        getWebDevData(pepcodingLink);
+        break;
+      case "Traversy Media":
+        getWebDevData(traversyMediaLink);
+        break;
+      default:
+        return;
+    }
+  });
+}
+function solveCoreSubject() {
+  inquirer.prompt(coreSubjectList).then((answers) => {
+    console.log(answers.userChoice);
+    getCoreSubjectData(answers.userChoice);
+  });
+}
+
+function solveJob() {
+  inquirer.prompt(jobInformationQuestion).then((answers) => {
+    getJobInformation(answers.userChoice, answers.userCityChoice);
+  });
+}
+
+function solveDsa() {
+  inquirer.prompt(dsaQuestionList).then((answers) => {
+    if (answers.userChoice == "Leetcode") {
+      inquirer.prompt(dsaQuestion).then((answers) => {
+        if (!difficultyList.includes(answers.difficultyChoice)) {
+          console.log("Not a valid input.");
+          return;
+        } else {
+          console.log("Fetching data...................");
+          getLeetCodeData(answers.userChoice, answers.difficultyChoice);
+        }
+      });
+    } else if (true) {
+    }
+  });
+}
 
 async function getJobInformation(userJobChoice, userLocation) {
   const browser = await puppeteer.launch({
@@ -65,8 +108,6 @@ async function getJobInformation(userJobChoice, userLocation) {
     '[data-tracking-control-name="public_jobs_jobs-search-bar_base-search-bar-search-submit"]'
   );
   await page.waitForNavigation();
-  await page;
-  // await browser.close();
 }
 
 async function getLeetCodeData(userChoice, difficultyChoice) {
@@ -82,6 +123,7 @@ async function getLeetCodeData(userChoice, difficultyChoice) {
   } catch {
     await page.click("#reload-button");
   }
+  await page.waitForSelector(".flex.relative.mb-1 a");
   let allTopic = await page.evaluate(function () {
     let allTag = document.querySelectorAll(".flex.relative.mb-1 a");
     let allTopicList = {};
@@ -89,26 +131,124 @@ async function getLeetCodeData(userChoice, difficultyChoice) {
     for (let i = 0; i < allTag.length; i++) {
       let tagName = allTag[i].innerText.split("\n")[0];
       let anchorLink = "https://leetcode.com" + allTag[i].getAttribute("href");
-
       allTopicList[tagName] = anchorLink;
     }
-  
     return allTopicList;
-
-    
   });
-  // console.log(allTopic);
   userChoice = userChoice[0].toUpperCase() + userChoice.substring(1);
-  
   let useChoiceExist = Object.keys(allTopic).includes(userChoice);
   let difficultyChoiceExist = difficultyList.includes(difficultyChoice);
   if (useChoiceExist && difficultyChoiceExist) {
-    await page.goto(allTopic[userChoice]);
+    // do nothing
   } else {
     console.log("Please enter correct value");
+    await browser.close();
+    return;
   }
-}
+  await Promise.all([
+    page.goto(allTopic[userChoice]),
+    page.waitForNavigation(),
+  ]);
 
+  await page.waitForSelector(".title-cell__ZGos>a");
+  userProblemList = await page.evaluate(function (difficultyChoice) {
+    let problemLinkList = document.querySelectorAll(".title-cell__ZGos>a");
+    let problemDifficultyList = document.querySelectorAll(
+      "[label = 'Difficulty']"
+    );
+    let allProblemList = [];
+    for (let i = 0; i < problemLinkList.length; i++) {
+      let problemTitle = problemLinkList[i].innerText;
+      let userChoiceMap = {};
+      let prolemLink =
+        "https://leetcode.com" + problemLinkList[i].getAttribute("href");
+      if (
+        problemDifficultyList[i].innerText.toLowerCase() == difficultyChoice
+      ) {
+        userChoiceMap[problemTitle] = [
+          prolemLink,
+          problemDifficultyList[i].innerText,
+        ];
+        allProblemList.push(userChoiceMap);
+      }
+    }
+    console.log(allProblemList);
+    return allProblemList;
+  }, difficultyChoice);
+  ExportData(userProblemList);
+  // console.log(userProblemList.length);
+  // console.log(userProblemList[userProblemList.length - 1]);
+}
 function getCoreSubjectData(userChoice) {}
 
-function getWebDevData(userChoice) {}
+async function getWebDevData(userChoice) {
+  let totalvideos = 0;
+  const browser = await puppeteer.launch({
+    headless: false,
+    slowMo: 250,
+    defaultViewport: null,
+    args: ["--start-maximized"],
+  });
+  const page = await browser.newPage();
+  await page.goto(userChoice);
+  await page.waitForSelector("#stats .style-scope.yt-formatted-string");
+  totalvideos = await page.evaluate(function () {
+    let videoCount = document.querySelectorAll(
+      "#stats .style-scope.yt-formatted-string"
+    )[0];
+    return Number(videoCount.innerText);
+  });
+  await page.waitForSelector(
+    "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
+  );
+  await page.waitForSelector("a#video-title");
+  await page.evaluate(function (totalvideos) {
+    let durationList = document.querySelectorAll(
+      "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
+    );
+    let videoTitleList = document.querySelectorAll("a#video-title");
+    
+    await new Promise(function (resolve, reject) {
+      let interval = setInterval( function () {
+        if (totalvideos != durationList.length) {
+          let videoCardContainer = document.querySelector("#contents");
+          window.scrollTo(0, videoCardContainer.scrollHeight);
+          durationList = document.querySelectorAll(
+            "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
+          );
+        } else {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 500);
+    });
+
+    a
+    let allvideoLink = [];
+    let allDuration = [];
+    let allTitle = [];
+    for (let i = 0; i < videoTitleList; i++) {
+      allTitle[i] = allvideoLink[i].innerText;
+      allDuration.push(urationList[i].innerText.trim());
+      allvideoLink.push(
+        "https://www.youtube.com" + videoTitleList[i].getAttribute("href")
+      );
+
+      console.log(allTitle[i], allDuration[i], allvideoLink[i]);
+    }
+
+  }, totalvideos);
+
+      
+}
+
+// console.log(allProblemList);
+// function ExportData(userProblemList)
+// {
+//     let filename='leetcode.xlsx';
+
+//     var ws = XLSX.utils.json_to_sheet(userProblemList);
+//     var wb = XLSX.utils.book_new();
+//     XLSX.utils.book_append_sheet(wb, ws, "People");
+//     XLSX.writeFile(wb,filename);
+//  }
