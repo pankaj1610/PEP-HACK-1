@@ -10,11 +10,12 @@ const {
 } = require("./question.js");
 const xlsx = require("xlsx");
 
-let pepcodingLink = "https://www.youtube.com/watch?v=mrEcfu-ByDw&list=PL-Jc9J83PIiEeD3I4VXETPDmzJ3Z1rWb4";
-let traversyMediaLink = "https://www.youtube.com/playlist?list=PLillGF-RfqbYeckUaD1z6nviTp31GLTH8";
-let userProblemList = [];
+let pepcodingLink =
+  "https://www.youtube.com/playlist?list=PL-Jc9J83PIiEeD3I4VXETPDmzJ3Z1rWb4";
+let traversyMediaLink =
+  "https://www.youtube.com/playlist?list=PLillGF-RfqbYeckUaD1z6nviTp31GLTH8";
+let userList = [];
 let difficultyList = ["Hard", "Easy", "Medium", "hard", "medium", "easy"];
-
 
 console.log("This is a multi-purpose command line interface.");
 
@@ -145,32 +146,36 @@ async function getLeetCodeData(userChoice, difficultyChoice) {
 
   await Promise.all([
     page.goto(allTopic[userChoice]),
-    page.waitForNavigation()
-  ]) 
-  
+    page.waitForNavigation(),
+  ]);
+
   await page.waitForSelector(".title-cell__ZGos>a");
 
-  userProblemList = await page.evaluate(function (difficultyChoice) {
+  userList = await page.evaluate(function (difficultyChoice) {
     let problemLinkList = document.querySelectorAll(".title-cell__ZGos>a");
-    let problemDifficultyList = document.querySelectorAll("[label = 'Difficulty']");
+    let problemDifficultyList = document.querySelectorAll(
+      "[label = 'Difficulty']"
+    );
     let allProblemList = [];
     let userChoiceMap;
+
     for (let i = 0; i < problemLinkList.length; i++) {
-   
       let problemTitle = problemLinkList[i].innerText;
       let prolemLink =
         "https://leetcode.com" + problemLinkList[i].getAttribute("href");
-      if (problemDifficultyList[i].innerText.toLowerCase() == difficultyChoice) {
-     
+
+      if (
+        problemDifficultyList[i].innerText.toLowerCase() == difficultyChoice
+      ) {
         userChoiceMap = { problemTitle, prolemLink };
         allProblemList.push(userChoiceMap);
       }
     }
-    
     return allProblemList;
   }, difficultyChoice);
-  await writeInExcel(userProblemList);
-  console.log("A copy of data is saved in your current directory.")
+
+  await writeInExcel(userList);
+  console.log("A copy of data is saved in your current directory.");
   await browser.close();
 }
 
@@ -184,63 +189,64 @@ async function getWebDevData(userChoice) {
     defaultViewport: null,
     args: ["--start-maximized"],
   });
+
   const page = await browser.newPage();
   await page.goto(userChoice);
   await page.waitForSelector("#stats .style-scope.yt-formatted-string");
+
   totalvideos = await page.evaluate(function () {
     let videoCount = document.querySelectorAll(
       "#stats .style-scope.yt-formatted-string"
     )[0];
-    console.log(videoCount.innerText);
     return Number(videoCount.innerText);
   });
-  console.log(totalvideos);
-  // await page.waitForSelector(
-  //   "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
-  // );
-  // await page.waitForSelector("a#video-title");
-  // await page.evaluate(async function (totalvideos) {
-  //   let durationList = document.querySelectorAll(
-  //     "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
-  //   );
-  //   let videoTitleList = document.querySelectorAll("a#video-title");
 
-  //   await new Promise(function (resolve, reject) {
-  //     let interval = setInterval( function () {
-  //       if (totalvideos != durationList.length) {
-  //         let videoCardContainer = document.querySelector("#contents");
-  //         window.scrollTo(0, videoCardContainer.scrollHeight);
-  //         durationList = document.querySelectorAll(
-  //           "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
-  //         );
-  //       } else {
-  //         clearInterval(interval);
-  //         resolve();
-  //       }
-  //     }, 500);
-  //   });
+  await page.waitForSelector(
+    "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
+  );
+  await page.waitForSelector("a#video-title");
+  userList = await page.evaluate(async function (totalvideos) {
+    let durationList = document.querySelectorAll(
+      "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
+    );
 
-  //   let allvideoLink = [];
-  //   let allDuration = [];
-  //   let allTitle = [];
-  //   for (let i = 0; i < durationList.length; i++) {
-  //     allTitle[i] = allvideoLink[i].innerText;
-  //     allDuration.push(durationList[i].innerText.trim());
-  //     allvideoLink.push(
-  //       "https://www.youtube.com" + videoTitleList[i].getAttribute("href")
-  //     );
+    let videoTitleList = document.querySelectorAll("a#video-title");
 
-  //     console.log(allTitle[i], allDuration[i], allvideoLink[i]);
-  //   }
+    await new Promise(function (resolve, reject) {
+      let interval = setInterval(function () {
+        if (totalvideos != durationList.length) {
+          let videoCardContainer = document.querySelector("#contents");
+          window.scrollTo(0, videoCardContainer.scrollHeight);
+          durationList = document.querySelectorAll(
+            "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
+          );
+        } else {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 500);
+    });
 
-  // }, totalvideos);
+    let userChoiceMap;
+    let allVideoDetail = [];
+    for (let i = 0; i < durationList.length; i++) {
+      let videoTitle = videoTitleList[i].innerText;
+      let duration = durationList[i].innerText.trim();
+      let videoLink =
+        "https://www.youtube.com" + videoTitleList[i].getAttribute("href");
+      userChoiceMap = { videoTitle, videoLink, duration };
+      allVideoDetail.push(userChoiceMap);
+    }
+    return allVideoDetail;
+  }, totalvideos);
+  await writeInExcel(userList);
+  console.log("A copy of data is saved in your current directory.");
+  await browser.close();
 }
 
-// console.log(allProblemList);
-// let data = {"abc":"hrefjsdgu", "ajhsduha":"ahdjahdj", "sjhkcusdghdk":"jakjahdkjas", "lkshdjlhwjd":"aklhsdlhajlhdjas"};
-function writeInExcel(userProblemList){
-let newWB = xlsx.utils.book_new();
-let newWS = xlsx.utils.json_to_sheet(userProblemList);
-xlsx.utils.book_append_sheet(newWB, newWS, "first");
-xlsx.writeFile(newWB, "list.xlsx");
+function writeInExcel(userList) {
+  let newWorkBook = xlsx.utils.book_new();
+  let newWorkSheet = xlsx.utils.json_to_sheet(userList);
+  xlsx.utils.book_append_sheet(newWorkBook, newWorkSheet, "sheet");
+  xlsx.writeFile(newWorkBook, "list.xlsx");
 }

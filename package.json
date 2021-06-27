@@ -1,16 +1,17 @@
 {
-  "name": "pep-hack-1",
+  "name": "PEP-HACK-1",
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
-  "dependencies": {
-    "inquirer": "^8.1.1",
-    "puppeteer": "^10.0.0"
-  },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "inquirer": "^8.1.1",
+    "puppeteer": "^10.0.0",
+    "xlsx": "^0.17.0"
+  }
 }
