@@ -1,5 +1,3 @@
-"use strict";
-const { exitOverride } = require("commander");
 const inquirer = require("inquirer");
 const puppeteer = require("puppeteer");
 const {
@@ -10,13 +8,13 @@ const {
   jobInformationQuestion,
   dsaQuestion,
 } = require("./question.js");
-// const XLSX = require("xlsx");
-let pepcodingLink =
-  "https://www.youtube.com/watch?v=mrEcfu-ByDw&list=PL-Jc9J83PIiEeD3I4VXETPDmzJ3Z1rWb4";
-let traversyMediaLink =
-  "https://www.youtube.com/playlist?list=PLillGF-RfqbYeckUaD1z6nviTp31GLTH8";
+const xlsx = require("xlsx");
+
+let pepcodingLink = "https://www.youtube.com/watch?v=mrEcfu-ByDw&list=PL-Jc9J83PIiEeD3I4VXETPDmzJ3Z1rWb4";
+let traversyMediaLink = "https://www.youtube.com/playlist?list=PLillGF-RfqbYeckUaD1z6nviTp31GLTH8";
 let userProblemList = [];
 let difficultyList = ["Hard", "Easy", "Medium", "hard", "medium", "easy"];
+
 
 console.log("This is a multi-purpose command line interface.");
 
@@ -117,13 +115,11 @@ async function getLeetCodeData(userChoice, difficultyChoice) {
     defaultViewport: null,
     args: ["--start-maximized"],
   });
+
   const page = await browser.newPage();
-  try {
-    await page.goto("https://leetcode.com/problemset/all");
-  } catch {
-    await page.click("#reload-button");
-  }
+  await page.goto("https://leetcode.com/problemset/all");
   await page.waitForSelector(".flex.relative.mb-1 a");
+
   let allTopic = await page.evaluate(function () {
     let allTag = document.querySelectorAll(".flex.relative.mb-1 a");
     let allTopicList = {};
@@ -135,6 +131,7 @@ async function getLeetCodeData(userChoice, difficultyChoice) {
     }
     return allTopicList;
   });
+
   userChoice = userChoice[0].toUpperCase() + userChoice.substring(1);
   let useChoiceExist = Object.keys(allTopic).includes(userChoice);
   let difficultyChoiceExist = difficultyList.includes(difficultyChoice);
@@ -145,40 +142,38 @@ async function getLeetCodeData(userChoice, difficultyChoice) {
     await browser.close();
     return;
   }
+
   await Promise.all([
     page.goto(allTopic[userChoice]),
-    page.waitForNavigation(),
-  ]);
-
+    page.waitForNavigation()
+  ]) 
+  
   await page.waitForSelector(".title-cell__ZGos>a");
+
   userProblemList = await page.evaluate(function (difficultyChoice) {
     let problemLinkList = document.querySelectorAll(".title-cell__ZGos>a");
-    let problemDifficultyList = document.querySelectorAll(
-      "[label = 'Difficulty']"
-    );
+    let problemDifficultyList = document.querySelectorAll("[label = 'Difficulty']");
     let allProblemList = [];
+    let userChoiceMap;
     for (let i = 0; i < problemLinkList.length; i++) {
+   
       let problemTitle = problemLinkList[i].innerText;
-      let userChoiceMap = {};
       let prolemLink =
         "https://leetcode.com" + problemLinkList[i].getAttribute("href");
-      if (
-        problemDifficultyList[i].innerText.toLowerCase() == difficultyChoice
-      ) {
-        userChoiceMap[problemTitle] = [
-          prolemLink,
-          problemDifficultyList[i].innerText,
-        ];
+      if (problemDifficultyList[i].innerText.toLowerCase() == difficultyChoice) {
+     
+        userChoiceMap = { problemTitle, prolemLink };
         allProblemList.push(userChoiceMap);
       }
     }
-    console.log(allProblemList);
+    
     return allProblemList;
   }, difficultyChoice);
-  ExportData(userProblemList);
-  // console.log(userProblemList.length);
-  // console.log(userProblemList[userProblemList.length - 1]);
+  await writeInExcel(userProblemList);
+  console.log("A copy of data is saved in your current directory.")
+  await browser.close();
 }
+
 function getCoreSubjectData(userChoice) {}
 
 async function getWebDevData(userChoice) {
@@ -196,59 +191,56 @@ async function getWebDevData(userChoice) {
     let videoCount = document.querySelectorAll(
       "#stats .style-scope.yt-formatted-string"
     )[0];
+    console.log(videoCount.innerText);
     return Number(videoCount.innerText);
   });
-  await page.waitForSelector(
-    "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
-  );
-  await page.waitForSelector("a#video-title");
-  await page.evaluate(function (totalvideos) {
-    let durationList = document.querySelectorAll(
-      "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
-    );
-    let videoTitleList = document.querySelectorAll("a#video-title");
-    
-    await new Promise(function (resolve, reject) {
-      let interval = setInterval( function () {
-        if (totalvideos != durationList.length) {
-          let videoCardContainer = document.querySelector("#contents");
-          window.scrollTo(0, videoCardContainer.scrollHeight);
-          durationList = document.querySelectorAll(
-            "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
-          );
-        } else {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 500);
-    });
+  console.log(totalvideos);
+  // await page.waitForSelector(
+  //   "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
+  // );
+  // await page.waitForSelector("a#video-title");
+  // await page.evaluate(async function (totalvideos) {
+  //   let durationList = document.querySelectorAll(
+  //     "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
+  //   );
+  //   let videoTitleList = document.querySelectorAll("a#video-title");
 
-    a
-    let allvideoLink = [];
-    let allDuration = [];
-    let allTitle = [];
-    for (let i = 0; i < videoTitleList; i++) {
-      allTitle[i] = allvideoLink[i].innerText;
-      allDuration.push(urationList[i].innerText.trim());
-      allvideoLink.push(
-        "https://www.youtube.com" + videoTitleList[i].getAttribute("href")
-      );
+  //   await new Promise(function (resolve, reject) {
+  //     let interval = setInterval( function () {
+  //       if (totalvideos != durationList.length) {
+  //         let videoCardContainer = document.querySelector("#contents");
+  //         window.scrollTo(0, videoCardContainer.scrollHeight);
+  //         durationList = document.querySelectorAll(
+  //           "#text.style-scope.ytd-thumbnail-overlay-time-status-renderer"
+  //         );
+  //       } else {
+  //         clearInterval(interval);
+  //         resolve();
+  //       }
+  //     }, 500);
+  //   });
 
-      console.log(allTitle[i], allDuration[i], allvideoLink[i]);
-    }
+  //   let allvideoLink = [];
+  //   let allDuration = [];
+  //   let allTitle = [];
+  //   for (let i = 0; i < durationList.length; i++) {
+  //     allTitle[i] = allvideoLink[i].innerText;
+  //     allDuration.push(durationList[i].innerText.trim());
+  //     allvideoLink.push(
+  //       "https://www.youtube.com" + videoTitleList[i].getAttribute("href")
+  //     );
 
-  }, totalvideos);
+  //     console.log(allTitle[i], allDuration[i], allvideoLink[i]);
+  //   }
 
-      
+  // }, totalvideos);
 }
 
 // console.log(allProblemList);
-// function ExportData(userProblemList)
-// {
-//     let filename='leetcode.xlsx';
-
-//     var ws = XLSX.utils.json_to_sheet(userProblemList);
-//     var wb = XLSX.utils.book_new();
-//     XLSX.utils.book_append_sheet(wb, ws, "People");
-//     XLSX.writeFile(wb,filename);
-//  }
+// let data = {"abc":"hrefjsdgu", "ajhsduha":"ahdjahdj", "sjhkcusdghdk":"jakjahdkjas", "lkshdjlhwjd":"aklhsdlhajlhdjas"};
+function writeInExcel(userProblemList){
+let newWB = xlsx.utils.book_new();
+let newWS = xlsx.utils.json_to_sheet(userProblemList);
+xlsx.utils.book_append_sheet(newWB, newWS, "first");
+xlsx.writeFile(newWB, "list.xlsx");
+}
