@@ -1,5 +1,5 @@
 let mainMenu = {
-  type: "rawlist",
+  type: "list",
   name: "userChoice",
   message: "Select(Use arrow keys)",
   choices: [
@@ -11,10 +11,10 @@ let mainMenu = {
 };
 
 let dsaQuestionList = {
-  type: "rawlist",
+  type: "list",
   name: "userChoice",
   message: "Select any section:",
-  choices: ["Leetcode", "Geeks for Geeks", "Interviewbit"],
+  choices: ["Leetcode", "Interviewbit"],
 };
 let coreSubjectList = {
   type: "list",
@@ -45,7 +45,7 @@ let webDevelopementList = {
   type: "list",
   name: "userChoice",
   message: "Select any section:",
-  choices: ["Pepcoding", "Free Code Camp", "Traversy Media"],
+  choices: ["Pepcoding","Traversy Media"],
 };
 let jobInformationQuestion = [
   {
