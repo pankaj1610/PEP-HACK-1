@@ -1,7 +1,7 @@
+// Required modules
 const inquirer = require("inquirer");
 const puppeteer = require("puppeteer");
 const {
-  coreSubjectList,
   dsaOptionList,
   mainMenu,
   webDevelopementList,
@@ -10,6 +10,7 @@ const {
 } = require("./question.js");
 const xlsx = require("xlsx");
 
+// global variable
 let pepcodingLink =
   "https://www.youtube.com/playlist?list=PL-Jc9J83PIiEeD3I4VXETPDmzJ3Z1rWb4";
 let traversyMediaLink =
@@ -17,15 +18,11 @@ let traversyMediaLink =
 let userList = [];
 let difficultyList = ["Hard", "Easy", "Medium", "hard", "medium", "easy"];
 
-console.log("This is a multi-purpose command line interface.");
-
+// Main menu
 inquirer.prompt(mainMenu).then((answers) => {
   switch (answers.userChoice) {
     case "Data Structure and Algorithm":
       solveDsa();
-      break;
-    case "Core Subject":
-      solveCoreSubject();
       break;
     case "Web Developement":
       solveWebDev();
@@ -33,25 +30,22 @@ inquirer.prompt(mainMenu).then((answers) => {
   }
 });
 
+// web dev menu
 function solveWebDev() {
   inquirer.prompt(webDevelopementList).then((answers) => {
-    console.log(answers.userChoice);
     switch (answers.userChoice) {
       case "Pepcoding":
-        getWebDevData(pepcodingLink);
+        console.log("Fetching data...................");
+        getWebDevData(pepcodingLink, "Pepcoding");
         break;
       case "Traversy Media":
-        getWebDevData(traversyMediaLink);
+        console.log("Fetching data...................");
+        getWebDevData(traversyMediaLink, "Traversy Media");
         break;
     }
   });
 }
-function solveCoreSubject() {
-  inquirer.prompt(coreSubjectList).then((answers) => {
-    getCoreSubjectData(answers.userChoice);
-  });
-}
-
+// Dsa menu
 function solveDsa() {
   inquirer.prompt(dsaOptionList).then((answers) => {
     switch (answers.userChoice) {
@@ -75,6 +69,7 @@ function solveDsa() {
   });
 }
 
+//
 async function getInterviewBitData(userChoice) {
   const browser = await puppeteer.launch({
     headless: false,
@@ -84,14 +79,14 @@ async function getInterviewBitData(userChoice) {
   });
 
   const page = await browser.newPage();
-
   await page.goto("https://www.interviewbit.com/courses/programming/");
-
   await page.waitForSelector(".topic-box.unlocked a");
   let idx;
+
   let topicList = await page.evaluate(function () {
     let alltopicLink = document.querySelectorAll(".topic-box.unlocked a");
     let allTopic = [];
+
     for (let i = 0; i < alltopicLink.length; i++) {
       let map;
       let topicTitle = alltopicLink[i].innerText;
@@ -108,6 +103,7 @@ async function getInterviewBitData(userChoice) {
       idx = i;
     }
   }
+
   await page.goto(topicList[idx].topicLink);
   userList = await page.evaluate(function () {
     let problemLinkList = document.querySelectorAll(".locked.problem_title");
@@ -119,13 +115,13 @@ async function getInterviewBitData(userChoice) {
       let prolemLink =
         "https://www.interviewbit.com" +
         problemLinkList[i].getAttribute("href");
-      console.log(problemLinkList[i]);
       userChoiceMap = { problemTitle, prolemLink };
       allProblemList.push(userChoiceMap);
     }
     return allProblemList;
   });
-  await writeInExcel(userList, "interviewbit");
+
+  await writeInExcel(userList, "interviewbit" + userChoice);
   console.log("A copy of data is saved in your current directory.");
   await browser.close();
 }
@@ -171,7 +167,6 @@ async function getLeetCodeData(userChoice, difficultyChoice) {
   ]);
 
   await page.waitForSelector(".title-cell__ZGos>a");
-
   userList = await page.evaluate(function (difficultyChoice) {
     let problemLinkList = document.querySelectorAll(".title-cell__ZGos>a");
     let problemDifficultyList = document.querySelectorAll(
@@ -184,7 +179,6 @@ async function getLeetCodeData(userChoice, difficultyChoice) {
       let problemTitle = problemLinkList[i].innerText;
       let prolemLink =
         "https://leetcode.com" + problemLinkList[i].getAttribute("href");
-
       if (
         problemDifficultyList[i].innerText.toLowerCase() == difficultyChoice
       ) {
@@ -200,20 +194,7 @@ async function getLeetCodeData(userChoice, difficultyChoice) {
   await browser.close();
 }
 
-function getCoreSubjectData(userChoice) {
-  const browser = await puppeteer.launch({
-    headless: false,
-    slowMo: 250,
-    defaultViewport: null,
-    args: ["--start-maximized"],
-  });
-
-  const page = await browser.newPage();
-
-  await page.goto("https://www.interviewbit.com/courses/programming/");
-}
-
-async function getWebDevData(userChoice) {
+async function getWebDevData(userChoice, topicChoice) {
   let totalvideos = 0;
   const browser = await puppeteer.launch({
     headless: false,
@@ -243,7 +224,6 @@ async function getWebDevData(userChoice) {
     );
 
     let videoTitleList = document.querySelectorAll("a#video-title");
-
     await new Promise(function (resolve, reject) {
       let interval = setInterval(function () {
         if (totalvideos != durationList.length) {
@@ -261,6 +241,7 @@ async function getWebDevData(userChoice) {
 
     let userChoiceMap;
     let allVideoDetail = [];
+
     for (let i = 0; i < durationList.length; i++) {
       let videoTitle = videoTitleList[i].innerText;
       let duration = durationList[i].innerText.trim();
@@ -271,7 +252,8 @@ async function getWebDevData(userChoice) {
     }
     return allVideoDetail;
   }, totalvideos);
-  await writeInExcel(userList, "webdev");
+
+  await writeInExcel(userList, "webdev" + topicChoice);
   console.log("A copy of data is saved in your current directory.");
   await browser.close();
 }

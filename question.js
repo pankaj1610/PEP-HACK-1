@@ -4,7 +4,6 @@ let mainMenu = {
   message: "Select(Use arrow keys)",
   choices: [
     "Data Structure and Algorithm",
-    "Core Subject",
     "Web Developement",
     "Exit"
   ],
@@ -15,18 +14,6 @@ let dsaOptionList = {
   name: "userChoice",
   message: "Select any section:",
   choices: ["Leetcode", "Interviewbit","Exit"],
-};
-let coreSubjectList = {
-  type: "list",
-  name: "userChoice",
-  message: "Select any section:",
-  choices: [
-    "OOPS",
-    "Comuter Network",
-    "Database Management System",
-    "Operating System",
-    "Exit"
-  ],
 };
 
 let dsaQuestion = [
@@ -75,8 +62,8 @@ let interviewBitOptionList = {
 module.exports = {
   dsaOptionList,
   mainMenu,
-  coreSubjectList,
   webDevelopementList,
-  dsaQuestion
+  dsaQuestion,
+  interviewBitOptionList
  
 };
