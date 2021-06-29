@@ -1,22 +1,23 @@
 let mainMenu = {
-  type: "rawlist",
+  type: "list",
   name: "userChoice",
   message: "Select(Use arrow keys)",
   choices: [
     "Data Structure and Algorithm",
     "Core Subject",
     "Web Developement",
+    "Exit"
   ],
 };
 
 let dsaQuestionList = {
-  type: "rawlist",
+  type: "list",
   name: "userChoice",
   message: "Select any section:",
-  choices: ["Leetcode", "Interviewbit"],
+  choices: ["Leetcode", "Interviewbit","Exit"],
 };
 let coreSubjectList = {
-  type: "rawlist",
+  type: "list",
   name: "userChoice",
   message: "Select any section:",
   choices: [
@@ -24,6 +25,7 @@ let coreSubjectList = {
     "Comuter Network",
     "Database Management System",
     "Operating System",
+    "Exit"
   ],
 };
 
@@ -41,10 +43,10 @@ let dsaQuestion = [
 ]
 
 let webDevelopementList = {
-  type: "rawlist",
+  type: "list",
   name: "userChoice",
   message: "Select any section:",
-  choices: ["Pepcoding","Traversy Media"],
+  choices: ["Pepcoding","Traversy Media","Exit"],
 };
 
 module.exports = {
