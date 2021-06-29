@@ -10,7 +10,7 @@ let mainMenu = {
   ],
 };
 
-let dsaQuestionList = {
+let dsaOptionList = {
   type: "list",
   name: "userChoice",
   message: "Select any section:",
@@ -48,9 +48,32 @@ let webDevelopementList = {
   message: "Select any section:",
   choices: ["Pepcoding","Traversy Media","Exit"],
 };
-
+let interviewBitOptionList = {
+  type: "list",
+  name: "userChoice",
+  message: "Select any section:",
+  choices: [
+    "Time Complexity",
+    "Arrays",
+    "Math",
+    "Binary Search",
+    "Strings",
+    "Bit Manipulation",
+    "Two Pointers",
+    "Linked Lists",
+    "Stacks And Queues",
+    "Backtracking",
+    "Hashing",
+    "Heaps And Maps",
+    "Tree Data Structure",
+    "Dynamic Programming",
+    "Greedy Algorithm",
+    "Graph Data Structure & Algorithm",
+    "Exit"
+  ],
+}
 module.exports = {
-  dsaQuestionList,
+  dsaOptionList,
   mainMenu,
   coreSubjectList,
   webDevelopementList,
