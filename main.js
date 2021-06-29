@@ -2,11 +2,11 @@ const inquirer = require("inquirer");
 const puppeteer = require("puppeteer");
 const {
   coreSubjectList,
-  dsaQuestionList,
+  dsaOptionList,
   mainMenu,
   webDevelopementList,
-  jobInformationQuestion,
   dsaQuestion,
+  interviewBitOptionList,
 } = require("./question.js");
 const xlsx = require("xlsx");
 
@@ -30,11 +30,6 @@ inquirer.prompt(mainMenu).then((answers) => {
     case "Web Developement":
       solveWebDev();
       break;
-    case "Job Information":
-      solveJob();
-      break;
-    default:
-      return;
   }
 });
 
@@ -48,65 +43,91 @@ function solveWebDev() {
       case "Traversy Media":
         getWebDevData(traversyMediaLink);
         break;
-      default:
-        return;
     }
   });
 }
 function solveCoreSubject() {
   inquirer.prompt(coreSubjectList).then((answers) => {
-    console.log(answers.userChoice);
     getCoreSubjectData(answers.userChoice);
   });
 }
 
-function solveJob() {
-  inquirer.prompt(jobInformationQuestion).then((answers) => {
-    getJobInformation(answers.userChoice, answers.userCityChoice);
-  });
-}
-
 function solveDsa() {
-  inquirer.prompt(dsaQuestionList).then((answers) => {
-    if (answers.userChoice == "Leetcode") {
-      inquirer.prompt(dsaQuestion).then((answers) => {
-        if (!difficultyList.includes(answers.difficultyChoice)) {
-          console.log("Not a valid input.");
-          return;
-        } else {
+  inquirer.prompt(dsaOptionList).then((answers) => {
+    switch (answers.userChoice) {
+      case "Leetcode":
+        inquirer.prompt(dsaQuestion).then((answers) => {
+          if (!difficultyList.includes(answers.difficultyChoice)) {
+            console.log("Not a valid input.");
+            return;
+          } else {
+            console.log("Fetching data...................");
+            getLeetCodeData(answers.userChoice, answers.difficultyChoice);
+          }
+        });
+        break;
+      case "Interviewbit":
+        inquirer.prompt(interviewBitOptionList).then((answers) => {
           console.log("Fetching data...................");
-          getLeetCodeData(answers.userChoice, answers.difficultyChoice);
-        }
-      });
-    } else if (true) {
+          getInterviewBitData(answers.userChoice);
+        });
     }
   });
 }
 
-async function getJobInformation(userJobChoice, userLocation) {
+async function getInterviewBitData(userChoice) {
   const browser = await puppeteer.launch({
     headless: false,
     slowMo: 250,
     defaultViewport: null,
     args: ["--start-maximized"],
   });
+
   const page = await browser.newPage();
-  await page.goto("https://www.linkedin.com/jobs/search?position=1&pageNum=0");
-  await page.waitForSelector("[placeholder ='Search job titles or companies']");
-  await page.type(
-    '[placeholder ="Search job titles or companies"]',
-    userJobChoice
-  );
-  await page.click("[placeholder ='Location']");
-  await page.keyboard.down("Control");
-  await page.keyboard.press("KeyA");
-  await page.keyboard.press("KeyX");
-  await page.keyboard.up("Control");
-  await page.type("[placeholder ='Location']", userLocation);
-  await page.click(
-    '[data-tracking-control-name="public_jobs_jobs-search-bar_base-search-bar-search-submit"]'
-  );
-  await page.waitForNavigation();
+
+  await page.goto("https://www.interviewbit.com/courses/programming/");
+
+  await page.waitForSelector(".topic-box.unlocked a");
+  let idx;
+  let topicList = await page.evaluate(function () {
+    let alltopicLink = document.querySelectorAll(".topic-box.unlocked a");
+    let allTopic = [];
+    for (let i = 0; i < alltopicLink.length; i++) {
+      let map;
+      let topicTitle = alltopicLink[i].innerText;
+      let topicLink =
+        "https://www.interviewbit.com" + alltopicLink[i].getAttribute("href");
+      map = { topicTitle, topicLink };
+      allTopic.push(map);
+    }
+    return allTopic;
+  });
+
+  for (let i = 0; i < topicList.length; i++) {
+    if (userChoice == topicList[i].topicTitle) {
+      idx = i;
+    }
+  }
+  await page.goto(topicList[idx].topicLink);
+  userList = await page.evaluate(function () {
+    let problemLinkList = document.querySelectorAll(".locked.problem_title");
+    let allProblemList = [];
+    let userChoiceMap;
+
+    for (let i = 0; i < problemLinkList.length; i++) {
+      let problemTitle = problemLinkList[i].innerText;
+      let prolemLink =
+        "https://www.interviewbit.com" +
+        problemLinkList[i].getAttribute("href");
+      console.log(problemLinkList[i]);
+      userChoiceMap = { problemTitle, prolemLink };
+      allProblemList.push(userChoiceMap);
+    }
+    return allProblemList;
+  });
+  await writeInExcel(userList, "interviewbit");
+  console.log("A copy of data is saved in your current directory.");
+  await browser.close();
 }
 
 async function getLeetCodeData(userChoice, difficultyChoice) {
@@ -174,12 +195,23 @@ async function getLeetCodeData(userChoice, difficultyChoice) {
     return allProblemList;
   }, difficultyChoice);
 
-  await writeInExcel(userList);
+  await writeInExcel(userList, "leetcode");
   console.log("A copy of data is saved in your current directory.");
   await browser.close();
 }
 
-function getCoreSubjectData(userChoice) {}
+function getCoreSubjectData(userChoice) {
+  const browser = await puppeteer.launch({
+    headless: false,
+    slowMo: 250,
+    defaultViewport: null,
+    args: ["--start-maximized"],
+  });
+
+  const page = await browser.newPage();
+
+  await page.goto("https://www.interviewbit.com/courses/programming/");
+}
 
 async function getWebDevData(userChoice) {
   let totalvideos = 0;
@@ -239,14 +271,14 @@ async function getWebDevData(userChoice) {
     }
     return allVideoDetail;
   }, totalvideos);
-  await writeInExcel(userList);
+  await writeInExcel(userList, "webdev");
   console.log("A copy of data is saved in your current directory.");
   await browser.close();
 }
 
-function writeInExcel(userList) {
+function writeInExcel(userList, excelfile) {
   let newWorkBook = xlsx.utils.book_new();
   let newWorkSheet = xlsx.utils.json_to_sheet(userList);
   xlsx.utils.book_append_sheet(newWorkBook, newWorkSheet, "sheet");
-  xlsx.writeFile(newWorkBook, "list.xlsx");
+  xlsx.writeFile(newWorkBook, excelfile + ".xlsx");
 }
