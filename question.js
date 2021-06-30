@@ -1,7 +1,7 @@
 let mainMenu = {
   type: "list",
   name: "userChoice",
-  message: "Select(Use arrow keys)",
+  message: "Select",
   choices: [
     "Data Structure and Algorithm",
     "Web Developement",

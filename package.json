@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "inquirer": "^8.1.1",
-    "puppeteer": "^10.0.0",
+    "puppeteer": "^10.1.0",
     "xlsx": "^0.17.0"
   }
 }

@@ -73,7 +73,7 @@ function solveDsa() {
 async function getInterviewBitData(userChoice) {
   const browser = await puppeteer.launch({
     headless: false,
-    slowMo: 250,
+    slowMo: 100,
     defaultViewport: null,
     args: ["--start-maximized"],
   });
@@ -129,7 +129,7 @@ async function getInterviewBitData(userChoice) {
 async function getLeetCodeData(userChoice, difficultyChoice) {
   const browser = await puppeteer.launch({
     headless: false,
-    slowMo: 250,
+    slowMo: 100,
     defaultViewport: null,
     args: ["--start-maximized"],
   });
@@ -198,7 +198,7 @@ async function getWebDevData(userChoice, topicChoice) {
   let totalvideos = 0;
   const browser = await puppeteer.launch({
     headless: false,
-    slowMo: 250,
+    slowMo: 100,
     defaultViewport: null,
     args: ["--start-maximized"],
   });
